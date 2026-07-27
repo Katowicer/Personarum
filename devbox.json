@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
+  "packages": [
+    "jdk@21",
+    "maven@3.9",
+    "nodejs@22",
+    "postgresql@17"
+  ],
+  "env": {
+    "PGPORT": "5432"
+  },
+  "shell": {
+    "scripts": {
+      "versions": [
+        "java -version",
+        "javac -version",
+        "mvn -version",
+        "node --version",
+        "npm --version",
+        "postgres --version",
+        "psql --version"
+      ]
+    }
+  }
+}
