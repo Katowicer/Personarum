@@ -1,0 +1,15 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Devbox
+.devbox/
+.direnv/
+
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+storage/
+carbone-data/
