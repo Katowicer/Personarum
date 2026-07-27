@@ -45,6 +45,3 @@ backend/.nb-gradle/
 backendbuild/
 !backend/**/src/main/**/build/
 !backend/**/src/test/**/build/
-
-### VS Code ###
-.vscode/
