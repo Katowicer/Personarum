@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: personarum
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://127.0.0.1:5432/personarum}
+    username: ${DB_USERNAME:personarum}
+    password: ${DB_PASSWORD:personarum}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: ${SERVER_PORT:8080}
