@@ -1,25 +1,28 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
-  "packages": [
-    "jdk@21",
-    "maven@3.9",
-    "nodejs@22",
-    "postgresql@17"
-  ],
+  "packages": ["jdk@21", "maven@3.9", "nodejs@22", "postgresql@17"],
+
+  "include": ["plugin:postgresql"],
+
   "env": {
-    "PGPORT": "5432"
+    "PGPORT": "5432",
+    "DB_URL": "jdbc:postgresql://localhost:5432/personarum",
+    "DB_USER": "personarum",
+    "DB_PASSWORD": "personarum",
+    "APP_FRONTEND_ORIGIN": "http://localhost:5173",
+    "SESSION_COOKIE_SECURE": "false"
   },
   "shell": {
+    "init_hook": [
+      "if [ ! -f \"$PGDATA/PG_VERSION\" ]; then initdb -U personarum --auth-local=trust --auth-host=trust; fi"
+    ],
     "scripts": {
-      "versions": [
-        "java -version",
-        "javac -version",
-        "mvn -version",
-        "node --version",
-        "npm --version",
-        "postgres --version",
-        "psql --version"
-      ]
+      "db:init": ["createdb -U personarum personarum 2>/dev/null || true"],
+      "backend": "cd backend && mvn spring-boot:run",
+      "test": "cd backend && mvn clean test",
+      "verify": "cd backend && mvn clean verify",
+      "frontend:install": "cd frontend && npm install",
+      "frontend": "cd frontend && npm run dev"
     }
   }
 }
