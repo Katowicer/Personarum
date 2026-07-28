@@ -1,10 +1,21 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:personarum;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:personarum;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
     username: sa
-    password: ""
+    password:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+app:
+  security:
+    frontend-origin: http://localhost:5173
+
+    seed:
+      enabled: false
+      admin-password: ""
+      operator-password: ""
