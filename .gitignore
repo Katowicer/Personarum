@@ -65,8 +65,6 @@ frontend/coverage
 frontend/*.local
 
 # Editor directories and files
-frontend/.vscode/*
-frontend/!.vscode/extensions.json
 frontend/.idea
 frontend/*.suo
 frontend/*.ntvs*

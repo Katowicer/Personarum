@@ -6,6 +6,7 @@
     "redhat.vscode-yaml",
     "vue.volar",
     "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "vuetifyjs.vuetify-vscode"
   ]
 }
