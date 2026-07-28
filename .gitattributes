@@ -1,5 +1,5 @@
 # Per gestione WSL, VSCode e IntelliJ
-* text=auto
+* text=auto eol=lf
 
 *.java text eol=lf
 *.js text eol=lf
