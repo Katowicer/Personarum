@@ -21,6 +21,12 @@
       "backend": "cd backend && mvn spring-boot:run",
       "test": "cd backend && mvn clean test",
       "verify": "cd backend && mvn clean verify",
+
+      "auth:login": "COOKIE=/tmp/personarum.cookies; rm -f \"$COOKIE\"; CSRF=$(curl -fsS -c \"$COOKIE\" http://localhost:8080/api/auth/csrf | sed -n 's/.*\"token\":\"\\([^\"]*\\)\".*/\\1/p'); curl -fsS -b \"$COOKIE\" -c \"$COOKIE\" -H 'Content-Type: application/json' -H \"X-CSRF-TOKEN: $CSRF\" -d \"{\\\"username\\\":\\\"${PERSONARUM_USERNAME:-admin}\\\",\\\"password\\\":\\\"${PERSONARUM_PASSWORD:-ADMIN_PASSWORD_007}\\\"}\" http://localhost:8080/api/auth/login; echo",
+      "auth:me": "curl -fsS -b /tmp/personarum.cookies http://localhost:8080/api/auth/me; echo",
+      "auth:csrf": "curl -fsS -b /tmp/personarum.cookies -c /tmp/personarum.cookies http://localhost:8080/api/auth/csrf; echo",
+      "auth:logout": "COOKIE=/tmp/personarum.cookies; CSRF=$(curl -fsS -b \"$COOKIE\" -c \"$COOKIE\" http://localhost:8080/api/auth/csrf | sed -n 's/.*\"token\":\"\\([^\"]*\\)\".*/\\1/p'); curl -fsS -o /dev/null -w 'HTTP %{http_code}\\n' -b \"$COOKIE\" -c \"$COOKIE\" -H \"X-CSRF-TOKEN: $CSRF\" -X POST http://localhost:8080/api/auth/logout",
+
       "frontend:install": "cd frontend && npm install",
       "frontend": "cd frontend && npm run dev"
     }
