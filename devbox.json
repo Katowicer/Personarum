@@ -17,6 +17,7 @@
       "if [ ! -f \"$PGDATA/PG_VERSION\" ]; then initdb -U personarum --auth-local=trust --auth-host=trust; fi"
     ],
     "scripts": {
+      "ssh": "eval \"$(ssh-agent -s)\" && ssh-add ~/.ssh/id_polimi",
       "db:init": ["createdb -U personarum personarum 2>/dev/null || true"],
       "backend": "cd backend && mvn spring-boot:run",
       "test": "cd backend && mvn clean test",
