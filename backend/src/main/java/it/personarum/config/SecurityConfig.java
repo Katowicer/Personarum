@@ -41,7 +41,14 @@ public class SecurityConfig {
                 authorize -> authorize
                     .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                    .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/error").permitAll()
+                    .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/error"
+                    ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()
             )
             .exceptionHandling(
