@@ -85,3 +85,6 @@ frontend/__screenshots__/
 
 # Vite
 frontend/*.timestamp-*-*.mjs
+
+# OpenAPI
+personarum-openapi.json
