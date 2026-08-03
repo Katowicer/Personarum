@@ -1,27 +1,27 @@
 package it.personarum.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.personarum.domain.document.ProfileDocument;
+import it.personarum.domain.document.ProfileDocumentFile;
+import it.personarum.service.ProfileDocumentFileService;
 import it.personarum.service.ProfileDocumentService;
 import it.personarum.web.dto.document.CreateProfileDocumentRequest;
 import it.personarum.web.dto.document.ProfileDocumentResponse;
 import it.personarum.web.dto.document.UpdateProfileDocumentRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -34,9 +34,11 @@ import java.util.List;
 public class ProfileDocumentController {
 
     private final ProfileDocumentService profileDocumentService;
+    private final ProfileDocumentFileService profileDocumentFileService;
 
-    public ProfileDocumentController(ProfileDocumentService profileDocumentService) {
+    public ProfileDocumentController(ProfileDocumentService profileDocumentService, ProfileDocumentFileService profileDocumentFileService) {
         this.profileDocumentService = profileDocumentService;
+        this.profileDocumentFileService = profileDocumentFileService;
     }
 
     @PostMapping
@@ -204,5 +206,132 @@ public class ProfileDocumentController {
     })
     public void delete(@PathVariable Long profileId, @PathVariable Long documentId) {
         profileDocumentService.delete(profileId, documentId);
+    }
+
+    @PutMapping(value = "/{documentId}/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Upload document file",
+        description = """
+        Carica un file oppure sostituisce quello già legato al documento.
+        Sono ammessi file PDF, JPEG e PNG (per ora) fino a 5 MiB.
+        """
+    )
+    @SecurityRequirement(name = "csrfToken")
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "204",
+            description = "File caricato o sostituito con successo"
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "File vuoto o formato non supportato"
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Sessione di autenticazione mancante o non valida"
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Token CSRF mancante o non valido"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Profilo o documento non trovato"
+        ),
+        @ApiResponse(
+            responseCode = "413",
+            description = "File superiore alla dimensione massima consentita"
+        )
+    })
+    public void uploadFile(@PathVariable Long profileId, @PathVariable Long documentId, @RequestParam("file") MultipartFile file) throws IOException {
+        profileDocumentFileService.upload(
+            profileId,
+            documentId,
+            file.getOriginalFilename(),
+            file.getContentType(),
+            file.getBytes()
+        );
+    }
+
+    /* Uso ResponseEntity in quanto bisogna impostare diverse specifiche HTTP per i file */
+    @GetMapping("/{documentId}/file")
+    @Operation(
+        summary = "Download document file",
+        description = "Scarica il file associato al documento indicato."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "File restituito con successo",
+            content = {
+                @Content(
+                    mediaType = "application/pdf",
+                    schema = @Schema(type = "string", format = "binary")
+                ),
+                @Content(
+                    mediaType = "image/jpeg",
+                    schema = @Schema(type = "string", format = "binary")
+                ),
+                @Content(
+                    mediaType = "image/png",
+                    schema = @Schema(type = "string", format = "binary")
+                )
+            }
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Sessione di autenticazione mancante o non valida"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Profilo, documento o file non trovato"
+        )
+    })
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long profileId, @PathVariable Long documentId) {
+        ProfileDocumentFile documentFile = profileDocumentFileService.download(profileId, documentId);
+
+        ContentDisposition contentDisposition = ContentDisposition
+            .attachment()
+            .filename(documentFile.getOriginalFileName(), StandardCharsets.UTF_8)
+            .build();
+
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.parseMediaType(documentFile.getContentType()))
+            .contentLength(documentFile.getFileSize())
+            .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
+            .body(documentFile.getFileContent());
+    }
+
+    @DeleteMapping("/{documentId}/file")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(
+        summary = "Delete document file",
+        description = """
+        Elimina solo il file allegato mantenendo i dati del documento.
+        """
+    )
+    @SecurityRequirement(name = "csrfToken")
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "204",
+            description = "File eliminato con successo"
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Sessione di autenticazione mancante o non valida"
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Token CSRF mancante o non valido"
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Profilo, documento o file non trovato"
+        )
+    })
+    public void deleteFile(@PathVariable Long profileId, @PathVariable Long documentId) {
+        profileDocumentFileService.delete(profileId, documentId);
     }
 }
