@@ -1,7 +1,5 @@
-<script setup lang="ts"></script>
-
 <template>
-  <h1>Personarum</h1>
+  <v-app>
+    <router-view />
+  </v-app>
 </template>
-
-<style scoped></style>
