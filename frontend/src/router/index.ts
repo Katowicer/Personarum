@@ -1,8 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import LoginView from '@/views/LoginView.vue'
-import ProfilesView from '@/views/ProfilesView.vue'
 import { useAuthStore } from '@/stores/auth'
+import LoginView from '@/views/LoginView.vue'
+import ProfileDetailView from '@/views/ProfileDetailView.vue'
+import ProfileFormView from '@/views/ProfileFormView.vue'
+import ProfilesView from '@/views/ProfilesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,6 +23,30 @@ const router = createRouter({
       path: '/profiles',
       name: 'profiles',
       component: ProfilesView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/new',
+      name: 'profile-create',
+      component: ProfileFormView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/:profileId',
+      name: 'profile-detail',
+      component: ProfileDetailView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/:profileId/edit',
+      name: 'profile-edit',
+      component: ProfileFormView,
       meta: {
         requiresAuth: true,
       },
