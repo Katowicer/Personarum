@@ -3,26 +3,40 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { deleteProfile, findProfileById, type Profile } from '@/services/profileService'
+import {
+  deleteProfileDocument,
+  deleteProfileDocumentFile,
+  documentTypeLabel,
+  downloadProfileDocumentFile,
+  findAllProfileDocuments,
+  uploadProfileDocumentFile,
+  type ProfileDocument,
+} from '@/services/profileDocumentService'
 
 const route = useRoute()
 const router = useRouter()
 
 const profile = ref<Profile | null>(null)
+const documents = ref<ProfileDocument[]>([])
+
 const loading = ref(false)
-const deleting = ref(false)
+const deletingProfile = ref(false)
+const busyDocumentId = ref<number | null>(null)
 const error = ref<string | null>(null)
 
-function readProfileId(): number | null {
-  const profileId = Number(route.params.profileId)
+const selectedFiles = ref<Record<number, File | null>>({})
 
-  if (!Number.isInteger(profileId) || profileId <= 0) {
+function readProfileId(): number | null {
+  const value = Number(route.params.profileId)
+
+  if (!Number.isInteger(value) || value <= 0) {
     return null
   }
 
-  return profileId
+  return value
 }
 
-async function loadProfile(): Promise<void> {
+async function loadPage(): Promise<void> {
   const profileId = readProfileId()
 
   if (profileId === null) {
@@ -34,7 +48,13 @@ async function loadProfile(): Promise<void> {
   error.value = null
 
   try {
-    profile.value = await findProfileById(profileId)
+    const [loadedProfile, loadedDocuments] = await Promise.all([
+      findProfileById(profileId),
+      findAllProfileDocuments(profileId),
+    ])
+
+    profile.value = loadedProfile
+    documents.value = loadedDocuments
   } catch (cause) {
     error.value = getErrorMessage(cause)
   } finally {
@@ -55,7 +75,7 @@ async function removeProfile(): Promise<void> {
     return
   }
 
-  deleting.value = true
+  deletingProfile.value = true
   error.value = null
 
   try {
@@ -64,7 +84,127 @@ async function removeProfile(): Promise<void> {
   } catch (cause) {
     error.value = getErrorMessage(cause)
   } finally {
-    deleting.value = false
+    deletingProfile.value = false
+  }
+}
+
+async function removeDocument(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+
+  if (profileId === null) {
+    return
+  }
+
+  const confirmed = window.confirm(`Eliminare il documento ${documentTypeLabel(document.type)}?`)
+
+  if (!confirmed) {
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    await deleteProfileDocument(profileId, document.id)
+
+    documents.value = documents.value.filter((item) => item.id !== document.id)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
+  }
+}
+
+function selectFile(documentId: number, event: Event): void {
+  const input = event.target as HTMLInputElement
+  selectedFiles.value[documentId] = input.files?.[0] ?? null
+}
+
+async function uploadFile(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+  const file = selectedFiles.value[document.id]
+
+  if (profileId === null || !file) {
+    error.value = 'Seleziona un file da caricare'
+    return
+  }
+
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+
+  if (!allowedTypes.includes(file.type)) {
+    error.value = 'Sono ammessi soltanto file PDF, JPEG e PNG'
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = 'Il file non può superare 5 MiB'
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    await uploadProfileDocumentFile(profileId, document.id, file)
+
+    selectedFiles.value[document.id] = null
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
+  }
+}
+
+async function downloadFile(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+
+  if (profileId === null) {
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    const downloadedFile = await downloadProfileDocumentFile(profileId, document.id)
+
+    const url = URL.createObjectURL(downloadedFile.blob)
+    const link = window.document.createElement('a')
+
+    link.href = url
+    link.download = downloadedFile.fileName
+    link.click()
+
+    URL.revokeObjectURL(url)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
+  }
+}
+
+async function removeFile(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+
+  if (profileId === null) {
+    return
+  }
+
+  const confirmed = window.confirm('Eliminare il file allegato al documento?')
+
+  if (!confirmed) {
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    await deleteProfileDocumentFile(profileId, document.id)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
   }
 }
 
@@ -88,21 +228,25 @@ function displayDate(value: string | null): string {
   return new Date(`${value}T00:00:00`).toLocaleDateString('it-IT')
 }
 
-onMounted(loadProfile)
+onMounted(loadPage)
 </script>
 
 <template>
   <v-container>
-    <v-btn
-      variant="text"
-      prepend-icon="mdi-arrow-left"
-      :to="{ name: 'profiles' }"
-      class="mb-4"
-    ></v-btn>
+    <v-btn variant="text" prepend-icon="mdi-arrow-left" :to="{ name: 'profiles' }" class="mb-0">
+      Profili
+    </v-btn>
 
     <v-progress-linear v-if="loading" indeterminate class="mb-4" />
 
-    <v-alert v-if="error" type="error" variant="tonal" class="mb-4">
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+      @click:close="error = null"
+    >
       {{ error }}
     </v-alert>
 
@@ -123,14 +267,14 @@ onMounted(loadProfile)
             Modifica
           </v-btn>
 
-          <v-btn color="error" variant="outlined" :loading="deleting" @click="removeProfile">
+          <v-btn color="error" variant="outlined" :loading="deletingProfile" @click="removeProfile">
             Elimina
           </v-btn>
         </div>
       </div>
 
-      <v-card>
-        <v-card-title> Dati personali </v-card-title>
+      <v-card class="mb-8">
+        <v-card-title>Dati personali</v-card-title>
 
         <v-card-text>
           <v-row>
@@ -171,6 +315,148 @@ onMounted(loadProfile)
           </v-row>
         </v-card-text>
       </v-card>
+
+      <!-- todo: creare componente separata -->
+      <div class="d-flex align-center justify-space-between mb-4">
+        <h2 class="text-h5">Documenti associati</h2>
+
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-file-plus"
+          :to="{
+            name: 'profile-document-create',
+            params: { profileId: profile.id },
+          }"
+        >
+          Nuovo documento
+        </v-btn>
+      </div>
+
+      <v-alert v-if="documents.length === 0" type="info" variant="tonal">
+        Non sono ancora presenti documenti.
+      </v-alert>
+
+      <v-card v-for="document in documents" :key="document.id" class="mb-4">
+        <v-card-title class="d-flex align-center justify-space-between">
+          <span>
+            {{ documentTypeLabel(document.type) }}
+          </span>
+
+          <div>
+            <v-btn
+              variant="text"
+              size="small"
+              :to="{
+                name: 'profile-document-edit',
+                params: {
+                  profileId: profile.id,
+                  documentId: document.id,
+                },
+              }"
+            >
+              Modifica
+            </v-btn>
+
+            <v-btn
+              color="error"
+              variant="text"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              @click="removeDocument(document)"
+            >
+              Elimina
+            </v-btn>
+          </div>
+        </v-card-title>
+
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" md="6">
+              <strong>Numero</strong>
+              <div>
+                {{ displayValue(document.documentNumber) }}
+              </div>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <strong>Autorità di rilascio</strong>
+              <div>
+                {{ displayValue(document.issuingAuthority) }}
+              </div>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <strong>Data di rilascio</strong>
+              <div>
+                {{ displayDate(document.issueDate) }}
+              </div>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <strong>Data di scadenza</strong>
+              <div>
+                {{ displayDate(document.expirationDate) }}
+              </div>
+            </v-col>
+
+            <v-col cols="12">
+              <strong>Note</strong>
+              <div>{{ displayValue(document.notes) }}</div>
+            </v-col>
+          </v-row>
+
+          <v-divider class="my-4" />
+
+          <strong>File allegato</strong>
+
+          <div class="file-actions mt-2">
+            <input
+              type="file"
+              accept="application/pdf,image/jpeg,image/png"
+              @change="selectFile(document.id, $event)"
+            />
+
+            <v-btn
+              color="primary"
+              variant="outlined"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              :disabled="!selectedFiles[document.id]"
+              @click="uploadFile(document)"
+            >
+              Carica o sostituisci
+            </v-btn>
+
+            <v-btn
+              variant="outlined"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              @click="downloadFile(document)"
+            >
+              Scarica
+            </v-btn>
+
+            <v-btn
+              color="error"
+              variant="outlined"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              @click="removeFile(document)"
+            >
+              Elimina file
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
     </template>
   </v-container>
 </template>
+
+<style scoped>
+.file-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+</style>

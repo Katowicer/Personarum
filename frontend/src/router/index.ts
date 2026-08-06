@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import LoginView from '@/views/LoginView.vue'
 import ProfileDetailView from '@/views/ProfileDetailView.vue'
+import ProfileDocumentFormView from '@/views/ProfileDocumentFormView.vue'
 import ProfileFormView from '@/views/ProfileFormView.vue'
 import ProfilesView from '@/views/ProfilesView.vue'
 
@@ -36,9 +37,17 @@ const router = createRouter({
       },
     },
     {
-      path: '/profiles/:profileId',
-      name: 'profile-detail',
-      component: ProfileDetailView,
+      path: '/profiles/:profileId/documents/new',
+      name: 'profile-document-create',
+      component: ProfileDocumentFormView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/:profileId/documents/:documentId/edit',
+      name: 'profile-document-edit',
+      component: ProfileDocumentFormView,
       meta: {
         requiresAuth: true,
       },
@@ -47,6 +56,14 @@ const router = createRouter({
       path: '/profiles/:profileId/edit',
       name: 'profile-edit',
       component: ProfileFormView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/:profileId',
+      name: 'profile-detail',
+      component: ProfileDetailView,
       meta: {
         requiresAuth: true,
       },
