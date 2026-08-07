@@ -19,6 +19,7 @@
     "scripts": {
       "ssh": "eval \"$(ssh-agent -s)\" && ssh-add ~/.ssh/id_polimi",
       "db:init": ["createdb -U personarum personarum 2>/dev/null || true"],
+      "db:run": "devbox services start postgresql",
       "backend": "cd backend && mvn spring-boot:run",
       "test": "cd backend && mvn clean test",
       "verify": "cd backend && mvn clean verify",
@@ -31,7 +32,7 @@
       "frontend:install": "cd frontend && npm install",
       "frontend": "cd frontend && npm run dev",
       "openapi": [
-  	"curl --fail --show-error -o personarum-openapi.json http://localhost:8080/v3/api-docs"
+        "curl --fail --show-error -o personarum-openapi.json http://localhost:8080/v3/api-docs"
       ]
     }
   }
