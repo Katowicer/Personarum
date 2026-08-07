@@ -1,7 +1,7 @@
 import { apiDownload, apiRequest, type DownloadedFile } from '@/api/http'
 
 export type DocumentType =
-  'IDENTITY_CARD' | 'DRIVING_LICENSE' | 'PASSPORT' | 'HEALTH_CARD' | 'OTHER'
+  'IDENTITY_CARD' | 'DRIVING_LICENSE' | 'PASSPORT' | 'FISCAL_CARD' | 'OTHER'
 
 export interface ProfileDocument {
   id: number
@@ -41,7 +41,7 @@ export const documentTypeOptions: {
   },
   {
     title: 'Tessera sanitaria',
-    value: 'HEALTH_CARD',
+    value: 'FISCAL_CARD',
   },
   {
     title: 'Altro',
