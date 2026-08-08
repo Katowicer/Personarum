@@ -1,0 +1,8 @@
+package it.personarum.service.exception;
+
+public class UserAccountUsernameAlreadyExistsException extends RuntimeException {
+
+    public UserAccountUsernameAlreadyExistsException(String username) {
+        super("Username già utilizzato: " + username);
+    }
+}
