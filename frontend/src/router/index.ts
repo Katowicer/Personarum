@@ -6,6 +6,8 @@ import ProfileDetailView from '@/views/ProfileDetailView.vue'
 import ProfileDocumentFormView from '@/views/ProfileDocumentFormView.vue'
 import ProfileFormView from '@/views/ProfileFormView.vue'
 import ProfilesView from '@/views/ProfilesView.vue'
+import AdminUserFormView from '@/views/AdminUserFormView.vue'
+import AdminUsersView from '@/views/AdminUsersView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,6 +21,33 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+    },
+    {
+      path: '/admin/users',
+      name: 'admin-users',
+      component: AdminUsersView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/users/new',
+      name: 'admin-user-create',
+      component: AdminUserFormView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/users/:userId/edit',
+      name: 'admin-user-edit',
+      component: AdminUserFormView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
     },
     {
       path: '/profiles',
@@ -79,6 +108,12 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return {
       name: 'login',
+    }
+  }
+
+  if (to.meta.requiresAdmin && authStore.user?.role !== 'ADMIN') {
+    return {
+      name: 'profiles',
     }
   }
 

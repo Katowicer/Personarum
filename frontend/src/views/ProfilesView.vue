@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 import { createProfile, findAllProfiles, type Profile } from '@/services/profileService'
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/services/profileJsonService'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const profiles = ref<Profile[]>([])
 const search = ref('')
@@ -177,6 +179,15 @@ onMounted(loadProfiles)
 
         <v-btn color="primary" prepend-icon="mdi-account-plus" :to="{ name: 'profile-create' }">
           Nuovo profilo
+        </v-btn>
+
+        <v-btn
+          v-if="authStore.user?.role === 'ADMIN'"
+          variant="outlined"
+          prepend-icon="mdi-account-cog"
+          :to="{ name: 'admin-users' }"
+        >
+          Utenti
         </v-btn>
       </div>
     </div>
