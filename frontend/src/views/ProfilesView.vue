@@ -189,6 +189,14 @@ onMounted(loadProfiles)
         >
           Utenti
         </v-btn>
+        <v-btn
+          v-if="authStore.user?.role === 'ADMIN'"
+          variant="outlined"
+          prepend-icon="mdi-file-document-edit-outline"
+          :to="{ name: 'admin-templates' }"
+        >
+          Template
+        </v-btn>
       </div>
     </div>
 

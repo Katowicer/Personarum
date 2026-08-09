@@ -8,6 +8,8 @@ import ProfileFormView from '@/views/ProfileFormView.vue'
 import ProfilesView from '@/views/ProfilesView.vue'
 import AdminUserFormView from '@/views/AdminUserFormView.vue'
 import AdminUsersView from '@/views/AdminUsersView.vue'
+import AdminTemplatesView from '@/views/AdminTemplatesView.vue'
+import AdminTemplateFormView from '@/views/AdminTemplateFormView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +46,33 @@ const router = createRouter({
       path: '/admin/users/:userId/edit',
       name: 'admin-user-edit',
       component: AdminUserFormView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/templates',
+      name: 'admin-templates',
+      component: AdminTemplatesView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/templates/new',
+      name: 'admin-template-create',
+      component: AdminTemplateFormView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+      },
+    },
+    {
+      path: '/admin/templates/:templateId/edit',
+      name: 'admin-template-edit',
+      component: AdminTemplateFormView,
       meta: {
         requiresAuth: true,
         requiresAdmin: true,
