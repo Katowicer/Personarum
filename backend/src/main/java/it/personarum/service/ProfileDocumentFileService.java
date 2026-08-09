@@ -42,6 +42,7 @@ public class ProfileDocumentFileService {
         byte[] fileContent
     ) {
         ProfileDocument document = findDocument(profileId, documentId);
+        document.ensureEditable();
         String normalizedContentType = validateContentType(contentType);
 
         ProfileDocumentFile documentFile = profileDocumentFileRepository
@@ -65,7 +66,13 @@ public class ProfileDocumentFileService {
 
     @Transactional
     public void delete(Long profileId, Long documentId) {
-        ProfileDocumentFile documentFile = download(profileId, documentId);
+        ProfileDocument document = findDocument(profileId, documentId);
+        document.ensureEditable();
+
+        ProfileDocumentFile documentFile = profileDocumentFileRepository
+                .findById(documentId)
+                .orElseThrow(() -> new ProfileDocumentFileNotFoundException(profileId, documentId));
+
         profileDocumentFileRepository.delete(documentFile);
     }
 

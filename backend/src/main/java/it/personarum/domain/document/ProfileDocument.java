@@ -1,18 +1,9 @@
 package it.personarum.domain.document;
 
+import it.personarum.domain.document.state.ProfileDocumentState;
+import it.personarum.domain.document.state.ProfileDocumentStates;
 import it.personarum.domain.profile.Profile;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -39,6 +30,10 @@ public class ProfileDocument {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
     private DocumentType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ProfileDocumentStatus status;
 
     @Column(name = "document_number", length = 100)
     private String documentNumber;
@@ -68,6 +63,7 @@ public class ProfileDocument {
         String notes
     ) {
         this.profile = Objects.requireNonNull(profile, "Profilo obbligatorio");
+        this.status = ProfileDocumentStatus.ACTIVE;
 
         changeDetails(
             type,
@@ -79,9 +75,6 @@ public class ProfileDocument {
         );
     }
 
-    /**
-     * Crea un documento associato al profilo indicato.
-     */
     public static ProfileDocument create(
         Profile profile,
         DocumentType type,
@@ -102,9 +95,6 @@ public class ProfileDocument {
         );
     }
 
-    /**
-     * Modifica i metadati del documento.
-     */
     public void changeDetails(
         DocumentType type,
         String documentNumber,
@@ -112,19 +102,17 @@ public class ProfileDocument {
         LocalDate issueDate,
         LocalDate expirationDate,
         String notes
-    ) throws IllegalArgumentException {
-        this.type = Objects.requireNonNull(
-            type, "Tipo documento obbligatorio"
-        );
+    ) throws NullPointerException {
+        state().ensureEditable();
+
+        this.type = Objects.requireNonNull(type, "Tipo documento obbligatorio");
 
         if (issueDate != null && issueDate.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("La data di rilascio non può essere futura");
         }
 
         if (issueDate != null && expirationDate != null && expirationDate.isBefore(issueDate)) {
-            throw new IllegalArgumentException(
-                "La data di scadenza non può precedere la data di rilascio"
-            );
+            throw new IllegalArgumentException("La data di scadenza non può precedere la data di rilascio");
         }
 
         this.documentNumber = normalizeOptional(documentNumber);
@@ -134,11 +122,22 @@ public class ProfileDocument {
         this.notes = normalizeOptional(notes);
     }
 
-    private static String normalizeOptional(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
+    public void archive() {
+        status = state().archive();
+    }
 
+    public void restore() {
+        status = state().restore();
+    }
+
+    public void ensureEditable() { state().ensureEditable(); }
+
+    private ProfileDocumentState state() {
+        return ProfileDocumentStates.from(status);
+    }
+
+    private static String normalizeOptional(String value) {
+        if (value == null || value.isBlank()) { return null; }
         return value.trim();
     }
 
@@ -146,63 +145,35 @@ public class ProfileDocument {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Profile getProfile() {
         return profile;
-    }
-
-    public void setProfile(Profile profile) {
-        this.profile = profile;
     }
 
     public DocumentType getType() {
         return type;
     }
 
-    public void setType(DocumentType type) {
-        this.type = type;
+    public ProfileDocumentStatus getStatus() {
+        return status;
     }
 
     public String getDocumentNumber() {
         return documentNumber;
     }
 
-    public void setDocumentNumber(String documentNumber) {
-        this.documentNumber = documentNumber;
-    }
-
     public String getIssuingAuthority() {
         return issuingAuthority;
-    }
-
-    public void setIssuingAuthority(String issuingAuthority) {
-        this.issuingAuthority = issuingAuthority;
     }
 
     public LocalDate getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(LocalDate issueDate) {
-        this.issueDate = issueDate;
-    }
-
     public LocalDate getExpirationDate() {
         return expirationDate;
     }
 
-    public void setExpirationDate(LocalDate expirationDate) {
-        this.expirationDate = expirationDate;
-    }
-
     public String getNotes() {
         return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
     }
 }

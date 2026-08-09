@@ -208,6 +208,28 @@ public class ProfileDocumentController {
         profileDocumentService.delete(profileId, documentId);
     }
 
+    @PutMapping("/{documentId}/archive")
+    @Operation(
+        summary = "Archive profile document",
+        description = "Archivia il documento rendendolo non modificabile."
+    )
+    @SecurityRequirement(name = "csrfToken")
+    public ProfileDocumentResponse archive(@PathVariable Long profileId, @PathVariable Long documentId) {
+        ProfileDocument document = profileDocumentService.archive(profileId, documentId);
+        return ProfileDocumentResponse.from(document);
+    }
+
+    @PutMapping("/{documentId}/restore")
+    @Operation(
+        summary = "Restore profile document",
+        description = "Ripristina un documento precedentemente archiviato."
+    )
+    @SecurityRequirement(name = "csrfToken")
+    public ProfileDocumentResponse restore(@PathVariable Long profileId, @PathVariable Long documentId) {
+        ProfileDocument document = profileDocumentService.restore(profileId, documentId);
+        return ProfileDocumentResponse.from(document);
+    }
+
     @PutMapping(value = "/{documentId}/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(

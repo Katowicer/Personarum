@@ -101,7 +101,7 @@ public class ProfileDocumentService {
     @Transactional
     public void delete(Long profileId, Long documentId) {
         ProfileDocument document = findById(profileId, documentId);
-
+        document.ensureEditable();
         profileDocumentRepository.delete(document);
     }
 
@@ -109,5 +109,21 @@ public class ProfileDocumentService {
         return profileRepository
             .findById(profileId)
             .orElseThrow(() -> new ProfileNotFoundException(profileId));
+    }
+
+    @Transactional
+    public ProfileDocument archive(Long profileId, Long documentId) {
+        ProfileDocument document = findById(profileId, documentId);
+        document.archive();
+
+        return document;
+    }
+
+    @Transactional
+    public ProfileDocument restore(Long profileId, Long documentId) {
+        ProfileDocument document = findById(profileId, documentId);
+        document.restore();
+
+        return document;
     }
 }
