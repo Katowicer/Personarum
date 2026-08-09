@@ -3,10 +3,13 @@ import { apiDownload, apiRequest, type DownloadedFile } from '@/api/http'
 export type DocumentType =
   'IDENTITY_CARD' | 'DRIVING_LICENSE' | 'PASSPORT' | 'FISCAL_CARD' | 'OTHER'
 
+export type ProfileDocumentStatus = 'ACTIVE' | 'ARCHIVED'
+
 export interface ProfileDocument {
   id: number
   profileId: number
   type: DocumentType
+  status: ProfileDocumentStatus
   documentNumber: string | null
   issuingAuthority: string | null
   issueDate: string | null
@@ -121,6 +124,24 @@ export function downloadProfileDocumentFile(
 export function deleteProfileDocumentFile(profileId: number, documentId: number): Promise<void> {
   return apiRequest<void>(`${documentsPath(profileId)}/${documentId}/file`, {
     method: 'DELETE',
+  })
+}
+
+export function archiveProfileDocument(
+  profileId: number,
+  documentId: number,
+): Promise<ProfileDocument> {
+  return apiRequest<ProfileDocument>(`${documentsPath(profileId)}/${documentId}/archive`, {
+    method: 'PUT',
+  })
+}
+
+export function restoreProfileDocument(
+  profileId: number,
+  documentId: number,
+): Promise<ProfileDocument> {
+  return apiRequest<ProfileDocument>(`${documentsPath(profileId)}/${documentId}/restore`, {
+    method: 'PUT',
   })
 }
 

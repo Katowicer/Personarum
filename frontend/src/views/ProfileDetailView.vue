@@ -4,11 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { deleteProfile, findProfileById, type Profile } from '@/services/profileService'
 import {
+  archiveProfileDocument,
   deleteProfileDocument,
   deleteProfileDocumentFile,
   documentTypeLabel,
   downloadProfileDocumentFile,
   findAllProfileDocuments,
+  restoreProfileDocument,
   uploadProfileDocumentFile,
   type ProfileDocument,
 } from '@/services/profileDocumentService'
@@ -208,6 +210,56 @@ async function removeFile(document: ProfileDocument): Promise<void> {
   }
 }
 
+async function archiveDocument(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+
+  if (profileId === null) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    'Archiviare il documento? Non potrà essere modificato finché non verrà ripristinato.',
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    const updated = await archiveProfileDocument(profileId, document.id)
+
+    Object.assign(document, updated)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
+  }
+}
+
+async function restoreDocument(document: ProfileDocument): Promise<void> {
+  const profileId = readProfileId()
+
+  if (profileId === null) {
+    return
+  }
+
+  busyDocumentId.value = document.id
+  error.value = null
+
+  try {
+    const updated = await restoreProfileDocument(profileId, document.id)
+
+    Object.assign(document, updated)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    busyDocumentId.value = null
+  }
+}
+
 function getErrorMessage(cause: unknown): string {
   if (cause instanceof Error) {
     return cause.message
@@ -338,9 +390,15 @@ onMounted(loadPage)
 
       <v-card v-for="document in documents" :key="document.id" class="mb-4">
         <v-card-title class="d-flex align-center justify-space-between">
-          <span>
-            {{ documentTypeLabel(document.type) }}
-          </span>
+          <div class="d-flex align-center ga-2">
+            <span>
+              {{ documentTypeLabel(document.type) }}
+            </span>
+
+            <v-chip size="small" :color="document.status === 'ACTIVE' ? 'success' : undefined">
+              {{ document.status === 'ACTIVE' ? 'Attivo' : 'Archiviato' }}
+            </v-chip>
+          </div>
 
           <div>
             <v-btn
@@ -358,11 +416,32 @@ onMounted(loadPage)
             </v-btn>
 
             <v-btn
+              v-if="document.status === 'ACTIVE'"
+              variant="text"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              @click="archiveDocument(document)"
+            >
+              Archivia
+            </v-btn>
+
+            <v-btn
+              v-else
+              variant="text"
+              size="small"
+              :loading="busyDocumentId === document.id"
+              @click="restoreDocument(document)"
+            >
+              Ripristina
+            </v-btn>
+
+            <v-btn
               color="error"
               variant="text"
               size="small"
               :loading="busyDocumentId === document.id"
               @click="removeDocument(document)"
+              :disabled="document.status === 'ARCHIVED'"
             >
               Elimina
             </v-btn>
@@ -413,6 +492,7 @@ onMounted(loadPage)
             <input
               type="file"
               accept="application/pdf,image/jpeg,image/png"
+              :disabled="document.status === 'ARCHIVED'"
               @change="selectFile(document.id, $event)"
             />
 
@@ -421,7 +501,7 @@ onMounted(loadPage)
               variant="outlined"
               size="small"
               :loading="busyDocumentId === document.id"
-              :disabled="!selectedFiles[document.id]"
+              :disabled="document.status === 'ARCHIVED' || !selectedFiles[document.id]"
               @click="uploadFile(document)"
             >
               Carica o sostituisci
@@ -442,6 +522,7 @@ onMounted(loadPage)
               size="small"
               :loading="busyDocumentId === document.id"
               @click="removeFile(document)"
+              :disabled="document.status === 'ARCHIVED'"
             >
               Elimina file
             </v-btn>
