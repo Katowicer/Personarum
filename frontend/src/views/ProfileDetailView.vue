@@ -382,6 +382,34 @@ onMounted(loadPage)
         >
           Nuovo documento
         </v-btn>
+
+        <div class="d-flex ga-2">
+          <v-btn
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-file-document-plus-outline"
+            :to="{
+              name: 'profile-generated-documents',
+              params: {
+                profileId: profile.id,
+              },
+            }"
+          >
+            Documenti generati
+          </v-btn>
+
+          <v-btn
+            color="primary"
+            :to="{
+              name: 'profile-document-create',
+              params: {
+                profileId: profile.id,
+              },
+            }"
+          >
+            Aggiungi documento
+          </v-btn>
+        </div>
       </div>
 
       <v-alert v-if="documents.length === 0" type="info" variant="tonal">

@@ -10,6 +10,7 @@ import AdminUserFormView from '@/views/AdminUserFormView.vue'
 import AdminUsersView from '@/views/AdminUsersView.vue'
 import AdminTemplatesView from '@/views/AdminTemplatesView.vue'
 import AdminTemplateFormView from '@/views/AdminTemplateFormView.vue'
+import GeneratedDocumentsView from '@/views/GeneratedDocumentsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -122,6 +123,14 @@ const router = createRouter({
       path: '/profiles/:profileId',
       name: 'profile-detail',
       component: ProfileDetailView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/profiles/:profileId/generated-documents',
+      name: 'profile-generated-documents',
+      component: GeneratedDocumentsView,
       meta: {
         requiresAuth: true,
       },
