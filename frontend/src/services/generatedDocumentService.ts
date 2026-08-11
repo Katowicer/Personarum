@@ -1,4 +1,4 @@
-import { apiRequest } from '@/api/http'
+import { apiDownload, apiRequest, type DownloadedFile } from '@/api/http'
 
 export type DocumentGenerationType = 'STANDARD' | 'PROFILE_SUMMARY'
 
@@ -43,4 +43,11 @@ export function generateDocument(
     },
     body: JSON.stringify(payload),
   })
+}
+
+export function downloadGeneratedDocumentPdf(
+  profileId: number,
+  documentId: number,
+): Promise<DownloadedFile> {
+  return apiDownload(`${generatedDocumentsPath(profileId)}/${documentId}/pdf`)
 }

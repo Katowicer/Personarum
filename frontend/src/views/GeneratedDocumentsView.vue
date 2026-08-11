@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { findEnabledTemplates, type DocumentTemplate } from '@/services/documentTemplateService'
 
 import {
+  downloadGeneratedDocumentPdf,
   findGeneratedDocuments,
   generateDocument,
   type DocumentGenerationType,
@@ -24,6 +25,7 @@ const generatedDocument = ref<GeneratedDocument | null>(null)
 const loading = ref(false)
 const generating = ref(false)
 const error = ref<string | null>(null)
+const downloadingId = ref<number | null>(null)
 
 const profileId = computed<number | null>(() => {
   const value = route.params.profileId
@@ -129,6 +131,33 @@ function getErrorMessage(cause: unknown): string {
   return 'Si è verificato un errore'
 }
 
+async function downloadPdf(document: GeneratedDocument): Promise<void> {
+  if (profileId.value === null) {
+    return
+  }
+
+  downloadingId.value = document.id
+  error.value = null
+
+  try {
+    const downloadedFile = await downloadGeneratedDocumentPdf(profileId.value, document.id)
+
+    const url = URL.createObjectURL(downloadedFile.blob)
+
+    const link = window.document.createElement('a')
+
+    link.href = url
+    link.download = downloadedFile.fileName
+    link.click()
+
+    URL.revokeObjectURL(url)
+  } catch (cause) {
+    error.value = getErrorMessage(cause)
+  } finally {
+    downloadingId.value = null
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -223,6 +252,17 @@ onMounted(load)
         <v-card-text>
           <pre class="generated-content">{{ generatedDocument.content }}</pre>
         </v-card-text>
+        <v-card-actions>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-file-pdf-box"
+            :loading="downloadingId === generatedDocument.id"
+            @click="downloadPdf(generatedDocument)"
+          >
+            Scarica PDF
+          </v-btn>
+        </v-card-actions>
       </v-card>
 
       <v-card>
@@ -259,6 +299,16 @@ onMounted(load)
               <td class="text-right">
                 <v-btn variant="text" size="small" @click="showDocument(document)">
                   Visualizza
+                </v-btn>
+
+                <v-btn
+                  variant="text"
+                  size="small"
+                  prepend-icon="mdi-file-pdf-box"
+                  :loading="downloadingId === document.id"
+                  @click="downloadPdf(document)"
+                >
+                  PDF
                 </v-btn>
               </td>
             </tr>
