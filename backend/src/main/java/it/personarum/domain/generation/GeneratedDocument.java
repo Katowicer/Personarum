@@ -2,11 +2,28 @@ package it.personarum.domain.generation;
 
 import it.personarum.domain.profile.Profile;
 import it.personarum.domain.template.DocumentTemplate;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * Rappresenta l'istantanea persistita di un documento ottenuto applicando una strategia di generazione a un template.
+ *
+ * <p>Il contenuto viene salvato insieme ai riferimenti al profilo e al template, così una generazione
+ * già eseguita rimane consultabile anche se il template viene successivamente modificato.</p>
+ */
 @Entity
 @Table(name = "generated_documents")
 public class GeneratedDocument {
@@ -46,9 +63,20 @@ public class GeneratedDocument {
         }
 
         this.content = content;
-        this.createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
+    /**
+     * Crea una nuova istantanea di documento generato.
+     *
+     * @param profile        profilo utilizzato per la generazione
+     * @param template       template utilizzato
+     * @param generationType tipo di strategia applicata
+     * @param content        contenuto finale generato
+     * @return nuovo documento generato non ancora persistito
+     * @throws NullPointerException     se profilo, template o tipo di generazione sono nulli
+     * @throws IllegalArgumentException se il contenuto è assente
+     */
     public static GeneratedDocument create(Profile profile, DocumentTemplate template, DocumentGenerationType generationType, String content) {
         return new GeneratedDocument(profile, template, generationType, content);
     }

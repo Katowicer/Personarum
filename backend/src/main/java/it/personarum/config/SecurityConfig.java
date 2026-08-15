@@ -23,6 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Definisce autenticazione, autorizzazione, CSRF, CORS e gestione della sessione HTTP dell’applicazione.
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {

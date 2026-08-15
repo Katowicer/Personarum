@@ -8,9 +8,18 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Converte le eccezioni relative ai documenti generati in risposte HTTP ProblemDetail.
+ */
 @RestControllerAdvice
 public class GeneratedDocumentExceptionHandler {
 
+    /**
+     * Restituisce una risposta 404 quando il documento generato richiesto non esiste.
+     *
+     * @param exception eccezione gestita
+     * @return dettaglio del problema HTTP
+     */
     @ExceptionHandler(GeneratedDocumentNotFoundException.class)
     public ProblemDetail handleNotFound(GeneratedDocumentNotFoundException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -19,6 +28,12 @@ public class GeneratedDocumentExceptionHandler {
         return problem;
     }
 
+    /**
+     * Restituisce una risposta 400 quando si tenta di usare un template disabilitato.
+     *
+     * @param exception eccezione gestita
+     * @return dettaglio del problema HTTP
+     */
     @ExceptionHandler(DocumentTemplateDisabledException.class)
     public ProblemDetail handleDisabledTemplate(DocumentTemplateDisabledException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
@@ -27,6 +42,12 @@ public class GeneratedDocumentExceptionHandler {
         return problem;
     }
 
+    /**
+     * Restituisce una risposta 500 quando la creazione del PDF non può essere completata.
+     *
+     * @param exception eccezione gestita
+     * @return dettaglio del problema HTTP
+     */
     @ExceptionHandler(GeneratedDocumentPdfException.class)
     public ProblemDetail handlePdfGeneration(GeneratedDocumentPdfException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());

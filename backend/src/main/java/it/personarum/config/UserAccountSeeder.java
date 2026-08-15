@@ -9,6 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Inizializza, quando esplicitamente abilitato, gli account di sviluppo configurati tramite variabili d’ambiente.
+ */
 @Component
 public class UserAccountSeeder implements ApplicationRunner {
 
@@ -31,6 +34,11 @@ public class UserAccountSeeder implements ApplicationRunner {
         this.operatorPassword = operatorPassword;
     }
 
+    /**
+     * Esegue l’inizializzazione opzionale prevista all’avvio dell’applicazione.
+     *
+     * @param arguments argomenti di avvio, non utilizzati dal seeder
+     */
     @Override
     @Transactional
     public void run(@NonNull ApplicationArguments arguments) {

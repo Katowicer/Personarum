@@ -7,9 +7,18 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Converte le eccezioni applicative dei template in risposte HTTP ProblemDetail.
+ */
 @RestControllerAdvice
 public class DocumentTemplateExceptionHandler {
 
+    /**
+     * Restituisce una risposta 404 quando il template richiesto non esiste.
+     *
+     * @param exception eccezione gestita
+     * @return dettaglio del problema HTTP
+     */
     @ExceptionHandler(DocumentTemplateNotFoundException.class)
     public ProblemDetail handleNotFound(DocumentTemplateNotFoundException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -18,6 +27,12 @@ public class DocumentTemplateExceptionHandler {
         return problem;
     }
 
+    /**
+     * Restituisce una risposta 409 quando il nome del template è già utilizzato.
+     *
+     * @param exception eccezione gestita
+     * @return dettaglio del problema HTTP
+     */
     @ExceptionHandler(DocumentTemplateNameAlreadyExistsException.class)
     public ProblemDetail handleDuplicate(DocumentTemplateNameAlreadyExistsException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());

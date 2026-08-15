@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Converte un documento generato nella corrispondente rappresentazione PDF.
+ */
 @Service
 public class GeneratedDocumentPdfService {
 
@@ -23,6 +26,13 @@ public class GeneratedDocumentPdfService {
     private static final float FONT_SIZE = 11;
     private static final float LINE_HEIGHT = 16;
 
+    /**
+     * Converte il contenuto del documento generato in un PDF A4, andando a capo quando necessario.
+     *
+     * @param document documento generato da esportare
+     * @return contenuto binario del PDF
+     * @throws GeneratedDocumentPdfException se PDFBox non riesce a produrre il documento
+     */
     public byte[] generate(GeneratedDocument document) {
         try (PDDocument pdf = new PDDocument(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);

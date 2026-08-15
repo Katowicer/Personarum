@@ -7,6 +7,9 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configura i metadati OpenAPI e gli schemi di sicurezza esposti dalla documentazione REST.
+ */
 @Configuration
 public class OpenApiConfig {
 
@@ -20,7 +23,7 @@ public class OpenApiConfig {
                 new Info()
                     .title("Personarum API")
                     .description(
-                        "REST API per la gestione di profili e documentazione e template di documenti associati"
+                        "API REST di Personarum per la gestione di profili, documenti personali, template e documenti generati"
                     )
                     .version("1.0.0")
             )
@@ -33,7 +36,7 @@ public class OpenApiConfig {
                             .in(SecurityScheme.In.COOKIE)
                             .name("JSESSIONID")
                             .description(
-                                "Server-side authentication session creata tramite POST /api/auth/login"
+                                "Sessione di autenticazione server-side creata tramite POST /api/auth/login"
                             )
                     )
                     .addSecuritySchemes(
@@ -43,7 +46,7 @@ public class OpenApiConfig {
                             .in(SecurityScheme.In.HEADER)
                             .name("X-CSRF-TOKEN")
                             .description(
-                                "CSRF token preso da GET /api/auth/csrf"
+                                "Token CSRF ottenuto tramite GET /api/auth/csrf"
                             )
                     )
             );

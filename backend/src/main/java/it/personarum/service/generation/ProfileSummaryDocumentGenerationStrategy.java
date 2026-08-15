@@ -5,15 +5,20 @@ import it.personarum.domain.profile.Profile;
 import it.personarum.domain.template.DocumentTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Genera un documento estendendo il template con un riepilogo dei dati anagrafici del profilo.
+ */
 @Component
-public class ProfileSummaryDocumentGenerationStrategy
-    implements DocumentGenerationStrategy {
+public class ProfileSummaryDocumentGenerationStrategy implements DocumentGenerationStrategy {
 
     private final ProfilePlaceholderResolver placeholderResolver;
 
-    public ProfileSummaryDocumentGenerationStrategy(
-        ProfilePlaceholderResolver placeholderResolver
-    ) {
+    /**
+     * Crea la strategia di riepilogo del profilo.
+     *
+     * @param placeholderResolver componente che risolve i placeholder del profilo
+     */
+    public ProfileSummaryDocumentGenerationStrategy(ProfilePlaceholderResolver placeholderResolver) {
         this.placeholderResolver = placeholderResolver;
     }
 
@@ -22,6 +27,13 @@ public class ProfileSummaryDocumentGenerationStrategy
         return DocumentGenerationType.PROFILE_SUMMARY;
     }
 
+    /**
+     * Genera il contenuto aggiungendo al template una sezione con i principali dati del profilo.
+     *
+     * @param template template selezionato
+     * @param profile  profilo dal quale ricavare i valori
+     * @return contenuto completo con i placeholder risolti
+     */
     @Override
     public String generate(DocumentTemplate template, Profile profile) {
         String content = template.getContent() + """
