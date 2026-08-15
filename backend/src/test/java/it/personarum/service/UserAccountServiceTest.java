@@ -38,7 +38,7 @@ class UserAccountServiceTest {
 
     @Test
     void shouldCreateUser() {
-        when(userAccountRepository.existsByUsernameIgnoreCase("Operator")).thenReturn(false);
+        when(userAccountRepository.existsByUsernameIgnoreCase("operator")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("{bcrypt}hash");
         when(userAccountRepository.save(any(UserAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -57,11 +57,20 @@ class UserAccountServiceTest {
     void shouldRejectDuplicateUsername() {
         when(userAccountRepository.existsByUsernameIgnoreCase("admin")).thenReturn(true);
 
-        assertThatThrownBy(() -> userAccountService.create("admin", "password123", Role.ADMIN))
-            .isInstanceOf(UserAccountUsernameAlreadyExistsException.class);
+        assertThatThrownBy(() -> userAccountService.create("admin", "password123", Role.ADMIN)).isInstanceOf(UserAccountUsernameAlreadyExistsException.class);
 
         verify(passwordEncoder, never()).encode(anyString());
         verify(userAccountRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNormalizeUsernameBeforeCheckingDuplicates() {
+        when(userAccountRepository.existsByUsernameIgnoreCase("admin")).thenReturn(true);
+
+        assertThatThrownBy(() -> userAccountService.create("  ADMIN  ", "password123", Role.ADMIN)).isInstanceOf(UserAccountUsernameAlreadyExistsException.class);
+
+        verify(userAccountRepository).existsByUsernameIgnoreCase("admin");
+        verify(passwordEncoder, never()).encode(anyString());
     }
 
     @Test
@@ -85,8 +94,7 @@ class UserAccountServiceTest {
     void shouldFailWhenUserDoesNotExist() {
         when(userAccountRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userAccountService.findById(99L))
-            .isInstanceOf(UserAccountNotFoundException.class);
+        assertThatThrownBy(() -> userAccountService.findById(99L)).isInstanceOf(UserAccountNotFoundException.class);
     }
 
     @Test

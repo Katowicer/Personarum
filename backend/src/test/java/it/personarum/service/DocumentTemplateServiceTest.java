@@ -32,11 +32,9 @@ class DocumentTemplateServiceTest {
     @Test
     void shouldCreateTemplate() {
         when(repository.existsByNameIgnoreCase("Dichiarazione")).thenReturn(false);
-
         when(repository.save(any(DocumentTemplate.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         DocumentTemplate result = service.create("Dichiarazione", null, "Io {nome} {cognome}");
-
         assertThat(result.getName()).isEqualTo("Dichiarazione");
 
         verify(repository).save(any(DocumentTemplate.class));
@@ -47,7 +45,15 @@ class DocumentTemplateServiceTest {
         when(repository.existsByNameIgnoreCase("Dichiarazione")).thenReturn(true);
 
         assertThatThrownBy(() -> service.create("Dichiarazione", null, "Contenuto")).isInstanceOf(DocumentTemplateNameAlreadyExistsException.class);
+        verify(repository, never()).save(any());
+    }
 
+    @Test
+    void shouldNormalizeTemplateNameBeforeCheckingDuplicates() {
+        when(repository.existsByNameIgnoreCase("Dichiarazione")).thenReturn(true);
+        assertThatThrownBy(() -> service.create("  Dichiarazione  ", null, "Contenuto")).isInstanceOf(DocumentTemplateNameAlreadyExistsException.class);
+
+        verify(repository).existsByNameIgnoreCase("Dichiarazione");
         verify(repository, never()).save(any());
     }
 
@@ -56,14 +62,12 @@ class DocumentTemplateServiceTest {
         DocumentTemplate template = DocumentTemplate.create("Dichiarazione", null, "Contenuto");
 
         when(repository.findById(1L)).thenReturn(Optional.of(template));
-
         assertThat(service.findById(1L)).isSameAs(template);
     }
 
     @Test
     void shouldFailWhenTemplateDoesNotExist() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
-
         assertThatThrownBy(() -> service.findById(99L)).isInstanceOf(DocumentTemplateNotFoundException.class);
     }
 
@@ -72,15 +76,12 @@ class DocumentTemplateServiceTest {
         DocumentTemplate template = DocumentTemplate.create("Vecchio", null, "Vecchio contenuto");
 
         when(repository.findById(1L)).thenReturn(Optional.of(template));
-
         when(repository.existsByNameIgnoreCaseAndIdNot("Nuovo", 1L)).thenReturn(false);
 
         DocumentTemplate result = service.update(1L, "Nuovo", "Descrizione", "Nuovo contenuto", false);
 
         assertThat(result.getName()).isEqualTo("Nuovo");
-
         assertThat(result.getContent()).isEqualTo("Nuovo contenuto");
-
         assertThat(result.isEnabled()).isFalse();
     }
 }

@@ -248,6 +248,23 @@ class ProfileServiceTest {
     }
 
     @Test
+    void shouldNormalizeFiscalCodeBeforeCheckingUpdateDuplicate() {
+        Long profileId = 1L;
+        String occupiedFiscalCode = "VRDLGU85B20H501X";
+        Profile profile = Profile.create("Mario", "Rossi", null, null, FISCAL_CODE, null, null);
+
+        when(profileRepository.findById(profileId)).thenReturn(Optional.of(profile));
+        when(profileRepository.existsByFiscalCode(occupiedFiscalCode)).thenReturn(true);
+
+        assertThrows(ProfileFiscalCodeAlreadyExistsException.class, () -> profileService.update(
+            profileId, "Mario", "Rossi", null, null, "  vrdlgu85b20h501x  ", null, null
+        ));
+
+        assertEquals(FISCAL_CODE, profile.getFiscalCode());
+        verify(profileRepository).existsByFiscalCode(occupiedFiscalCode);
+    }
+
+    @Test
     void shouldDeleteProfile() {
         Long profileId = 1L;
 
