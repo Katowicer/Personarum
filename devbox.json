@@ -1,38 +1,182 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.5/.schema/devbox.schema.json",
-  "packages": ["jdk@21", "maven@3.9", "nodejs@22", "postgresql@17"],
+
+  "packages": [
+    "jdk@21",
+    "maven@3.9",
+    "nodejs@22",
+    "postgresql@17",
+    "curl",
+    "jq"
+  ],
 
   "include": ["plugin:postgresql"],
 
+  "env_from": ".env",
+
   "env": {
-    "PGPORT": "5432",
-    "DB_URL": "jdbc:postgresql://localhost:5432/personarum",
-    "DB_USER": "personarum",
-    "DB_PASSWORD": "personarum",
-    "APP_FRONTEND_ORIGIN": "http://localhost:5173",
-    "SESSION_COOKIE_SECURE": "false"
+    "PGPORT": "5432"
   },
+
   "shell": {
-    "init_hook": [
-      "if [ ! -f \"$PGDATA/PG_VERSION\" ]; then initdb -U personarum --auth-local=trust --auth-host=trust; fi"
-    ],
+    "init_hook": [],
+
     "scripts": {
-      "ssh": "eval \"$(ssh-agent -s)\" && ssh-add ~/.ssh/id_polimi",
-      "db:init": ["createdb -U personarum personarum 2>/dev/null || true"],
-      "db:run": "devbox services start postgresql",
-      "backend": "cd backend && mvn spring-boot:run",
-      "test": "cd backend && mvn clean test",
-      "verify": "cd backend && mvn clean verify",
+      "help": [
+        "printf '  %-29s %s\\n' 'devbox run backend' 'Avvia il backend Spring Boot'",
+        "printf '  %-29s %s\\n' 'devbox run frontend' 'Avvia il frontend Vue/Vite'",
+        "printf '  %-29s %s\\n' 'devbox run frontend:install' 'Installa le dipendenze frontend'",
 
-      "auth:login": "COOKIE=/tmp/personarum.cookies; rm -f \"$COOKIE\"; CSRF=$(curl -fsS -c \"$COOKIE\" http://localhost:8080/api/auth/csrf | sed -n 's/.*\"token\":\"\\([^\"]*\\)\".*/\\1/p'); curl -fsS -b \"$COOKIE\" -c \"$COOKIE\" -H 'Content-Type: application/json' -H \"X-CSRF-TOKEN: $CSRF\" -d \"{\\\"username\\\":\\\"${PERSONARUM_USERNAME:-admin}\\\",\\\"password\\\":\\\"${PERSONARUM_PASSWORD:-ADMIN_PASSWORD_007}\\\"}\" http://localhost:8080/api/auth/login; echo",
-      "auth:me": "curl -fsS -b /tmp/personarum.cookies http://localhost:8080/api/auth/me; echo",
-      "auth:csrf": "curl -fsS -b /tmp/personarum.cookies -c /tmp/personarum.cookies http://localhost:8080/api/auth/csrf; echo",
-      "auth:logout": "COOKIE=/tmp/personarum.cookies; CSRF=$(curl -fsS -b \"$COOKIE\" -c \"$COOKIE\" http://localhost:8080/api/auth/csrf | sed -n 's/.*\"token\":\"\\([^\"]*\\)\".*/\\1/p'); curl -fsS -o /dev/null -w 'HTTP %{http_code}\\n' -b \"$COOKIE\" -c \"$COOKIE\" -H \"X-CSRF-TOKEN: $CSRF\" -X POST http://localhost:8080/api/auth/logout",
+        "printf '  %-29s %s\\n' 'devbox run db:start' 'Avvia PostgreSQL'",
+        "printf '  %-29s %s\\n' 'devbox run db:stop' 'Arresta PostgreSQL'",
+        "printf '  %-29s %s\\n' 'devbox run db:restart' 'Riavvia PostgreSQL'",
+        "printf '  %-29s %s\\n' 'devbox run db:init' 'Crea il database Personarum se assente'",
+        "printf '  %-29s %s\\n' 'devbox run db:reset' 'Elimina e ricrea il database locale'",
+        "printf '  %-29s %s\\n' 'devbox run db:psql' 'Apre la console PostgreSQL'",
 
-      "frontend:install": "cd frontend && npm install",
-      "frontend": "cd frontend && npm run dev",
+        "printf '  %-29s %s\\n' 'devbox run flyway:info' 'Mostra lo stato delle migration'",
+        "printf '  %-29s %s\\n' 'devbox run flyway:migrate' 'Applica le migration pendenti'",
+
+        "printf '  %-29s %s\\n' 'devbox run test' 'Esegue tutti i test backend'",
+        "printf '  %-29s %s\\n' 'devbox run test:controllers' 'Esegue i test di integrazione REST'",
+        "printf '  %-29s %s\\n' 'devbox run test:services' 'Esegue i test dei service'",
+        "printf '  %-29s %s\\n' 'devbox run coverage' 'Esegue test e verifica JaCoCo'",
+        "printf '  %-29s %s\\n' 'devbox run frontend:check' 'Esegue type-check, lint e build frontend'",
+        "printf '  %-29s %s\\n' 'devbox run verify' 'Esegue tutti i controlli del progetto'",
+
+        "printf '  %-29s %s\\n' 'devbox run build' 'Compila backend e frontend'",
+        "printf '  %-29s %s\\n' 'devbox run build:backend' 'Compila il backend'",
+        "printf '  %-29s %s\\n' 'devbox run build:frontend' 'Compila il frontend'",
+        "printf '  %-29s %s\\n' 'devbox run clean' 'Rimuove gli output di build'",
+
+        "printf '  %-29s %s\\n' 'devbox run openapi' 'Esporta la specifica OpenAPI in JSON'",
+        "printf '  %-29s %s\\n' 'devbox run versions' 'Mostra le versioni degli strumenti'",
+
+        "printf '  %-29s %s\\n' 'devbox run docker:build' 'Costruisce le immagini Docker'",
+        "printf '  %-29s %s\\n' 'devbox run docker:up' 'Avvia lo stack Docker'",
+        "printf '  %-29s %s\\n' 'devbox run docker:down' 'Arresta lo stack Docker'",
+        "printf '  %-29s %s\\n' 'devbox run docker:logs' 'Mostra i log dello stack Docker'",
+        "printf '  %-29s %s\\n' 'devbox run docker:clean' 'Arresta Docker e rimuove i volumi'",
+
+        "printf '\\nAvvio in locale\\n'",
+        "printf '  1. devbox run db:start\\n'",
+        "printf '  2. devbox run backend\\n'",
+        "printf '  3. devbox run frontend\\n\\n'"
+      ],
+
+      "backend": ["cd backend", "mvn spring-boot:run"],
+
+      "frontend": ["cd frontend", "npm run dev"],
+
+      "frontend:install": ["cd frontend", "npm ci"],
+
+      "db:start": ["devbox services start postgresql"],
+
+      "db:stop": ["devbox services stop postgresql"],
+
+      "db:restart": [
+        "devbox services stop postgresql || true",
+        "devbox services start postgresql"
+      ],
+
+      "db:init": [
+        "devbox services start postgresql",
+        "createdb -U \"$DB_USER\" personarum 2>/dev/null || true",
+        "echo 'Database Personarum disponibile.'"
+      ],
+
+      "db:reset": [
+        "dropdb -U \"$DB_USER\" --if-exists personarum",
+        "createdb -U \"$DB_USER\" personarum",
+        "echo 'Database Personarum ricreato.'"
+      ],
+
+      "db:psql": ["psql -U \"$DB_USER\" -d personarum"],
+
+      "flyway:info": [
+        "cd backend",
+        "mvn flyway:info -Dflyway.url=\"$DB_URL\" -Dflyway.user=\"$DB_USER\" -Dflyway.password=\"$DB_PASSWORD\""
+      ],
+
+      "flyway:migrate": [
+        "cd backend",
+        "mvn flyway:migrate -Dflyway.url=\"$DB_URL\" -Dflyway.user=\"$DB_USER\" -Dflyway.password=\"$DB_PASSWORD\""
+      ],
+
+      "test": ["cd backend", "mvn test"],
+
+      "test:controllers": [
+        "cd backend",
+        "mvn test -Dtest='*ControllerIntegrationTest'"
+      ],
+
+      "test:services": ["cd backend", "mvn test -Dtest='*ServiceTest'"],
+
+      "coverage": ["cd backend", "mvn clean verify"],
+
+      "frontend:check": [
+        "cd frontend",
+        "npm run type-check",
+        "npm run lint",
+        "npm run build"
+      ],
+
+      "build:backend": ["cd backend", "mvn clean package -DskipTests"],
+
+      "build:frontend": ["cd frontend", "npm run build"],
+
+      "build": [
+        "printf '\\n[1/2] Build backend\\n'",
+        "cd backend",
+        "mvn clean package -DskipTests",
+        "cd ../frontend",
+        "printf '\\n[2/2] Build frontend\\n'",
+        "npm run build",
+        "printf '\\nBuild completata con successo.\\n'"
+      ],
+
+      "verify": [
+        "printf '\\n[1/2] Verifica backend\\n'",
+        "cd backend",
+        "mvn clean verify",
+        "cd ../frontend",
+        "printf '\\n[2/2] Verifica frontend\\n'",
+        "npm run type-check",
+        "npm run lint",
+        "npm run build",
+        "printf '\\nVerifica Personarum completata con successo.\\n'"
+      ],
+
+      "clean": [
+        "rm -rf backend/target",
+        "rm -rf frontend/dist",
+        "rm -rf frontend/.eslintcache",
+        "echo 'Output generati rimossi.'"
+      ],
+
       "openapi": [
-        "curl --fail --show-error -o personarum-openapi.json http://localhost:8080/v3/api-docs"
+        "curl --fail --show-error --silent http://localhost:8080/v3/api-docs -o personarum-openapi.json",
+        "echo 'Specifica OpenAPI esportata in personarum-openapi.json.'"
+      ],
+
+      "docker:build": ["docker compose build"],
+
+      "docker:up": ["docker compose up --build"],
+
+      "docker:down": ["docker compose down"],
+
+      "docker:logs": ["docker compose logs -f"],
+
+      "docker:clean": ["docker compose down --volumes --remove-orphans"],
+
+      "versions": [
+        "printf '\\nPersonarum - ambiente di sviluppo\\n\\n'",
+        "printf 'Java:       '; java -version 2>&1 | head -n 1",
+        "printf 'Maven:      '; mvn -version | head -n 1",
+        "printf 'Node.js:    '; node --version",
+        "printf 'npm:        '; npm --version",
+        "printf 'PostgreSQL: '; postgres --version",
+        "printf '\\n'"
       ]
     }
   }

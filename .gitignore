@@ -1,90 +1,39 @@
-# IntelliJ IDEA
-.idea/
-*.iml
-out/
-
-# Devbox
 .devbox/
 .direnv/
 
 backend/target/
+backend/.idea/
+backend/*.iml
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.factorypath
+backend/.apt_generated/
+backend/.sts4-cache/
+
 frontend/node_modules/
 frontend/dist/
-
-storage/
-carbone-data/
-
-# Spring Initializer
-backend/HELP.md
-backend/target/
-backend/.mvn/wrapper/maven-wrapper.jar
-!backend/**/src/main/**/target/
-!backend/**/src/test/**/target/
-
-### STS ###
-backend/.apt_generated
-backend/.classpath
-backend/.factorypath
-backend/.project
-backend/.settings
-backend/.springBeans
-backend/.sts4-cache
-
-### IntelliJ IDEA ###
-backend/.idea
-backend/*.iws
-backend/*.iml
-backend/*.ipr
-
-### NetBeans ###
-backend/nbproject/private/
-backend/nbbuild/
-backend/dist/
-backend/nbdist/
-backend/.nb-gradle/
-backendbuild/
-!backend/**/src/main/**/build/
-!backend/**/src/test/**/build/
-
-
-# npm create vue
-# Logs
-frontend/logs
+frontend/dist-ssr/
+frontend/coverage/
+frontend/.eslintcache
+frontend/*.tsbuildinfo
+frontend/*.local
 frontend/*.log
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 frontend/pnpm-debug.log*
-frontend/lerna-debug.log*
 
-frontend/node_modules
-frontend/.DS_Store
-frontend/dist
-frontend/dist-ssr
-frontend/coverage
-frontend/*.local
+.idea/
+*.iml
+.vscode/*.log
 
-# Editor directories and files
-frontend/.idea
-frontend/*.suo
-frontend/*.ntvs*
-frontend/*.njsproj
-frontend/*.sln
-frontend/*.sw?
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+*.log
 
-frontend/*.tsbuildinfo
-
-frontend/.eslintcache
-
-# Cypress
-frontend/cypress/videos/
-frontend/cypress/screenshots/
-
-# Vitest
-frontend/__screenshots__/
-
-# Vite
-frontend/*.timestamp-*-*.mjs
-
-# OpenAPI
+storage/
 personarum-openapi.json
