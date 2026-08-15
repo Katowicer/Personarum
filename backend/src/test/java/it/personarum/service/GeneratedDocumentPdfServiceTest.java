@@ -31,7 +31,7 @@ class GeneratedDocumentPdfServiceTest {
 
         try (PDDocument loadedDocument = Loader.loadPDF(pdf)) {
             String text = new PDFTextStripper().getText(loadedDocument);
-            assertThat(text).contains("DICHIARAZIONE").contains("Mario Rossi").contains("dichiara quanto sopra.");
+            assertThat(text).contains("DICHIARAZIONE").contains("Mario Rossi").contains("dichiara quanto dichiarato :)");
         }
     }
 }
