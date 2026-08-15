@@ -4,6 +4,9 @@ import it.personarum.domain.profile.Profile;
 
 import java.time.LocalDate;
 
+/**
+ * Rappresenta i dati anagrafici e di contatto di un profilo restituito dalle API.
+ */
 public record ProfileResponse(
     Long id,
     String firstName,
@@ -14,6 +17,12 @@ public record ProfileResponse(
     String email,
     String phone
 ) {
+    /**
+     * Converte un profilo di dominio nella relativa rappresentazione REST.
+     *
+     * @param profile profilo da convertire
+     * @return DTO contenente i dati del profilo
+     */
     public static ProfileResponse from(Profile profile) {
         return new ProfileResponse(
             profile.getId(),

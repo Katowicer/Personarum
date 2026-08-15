@@ -8,12 +8,11 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 
-public record CreateProfileRequest(
-    @NotBlank @Size(max = 100) String firstName,
-    @NotBlank @Size(max = 100) String lastName,
-    @PastOrPresent LocalDate birthDate,
-    @Size(max = 120) String birthPlace,
-    @Size(max = 16) String fiscalCode,
-    @Email @Size(max = 254) String email,
-    @Size(max = 40) String phone) {
+/**
+ * Trasferisce i dati dell’operazione CreateProfileRequest tra API REST e livello applicativo.
+ */
+public record CreateProfileRequest(@NotBlank @Size(max = 100) String firstName,
+                                   @NotBlank @Size(max = 100) String lastName, @PastOrPresent LocalDate birthDate,
+                                   @Size(max = 120) String birthPlace, @Size(max = 16) String fiscalCode,
+                                   @Email @Size(max = 254) String email, @Size(max = 40) String phone) {
 }

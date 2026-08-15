@@ -6,31 +6,20 @@ import it.personarum.domain.document.ProfileDocumentStatus;
 
 import java.time.LocalDate;
 
-public record ProfileDocumentResponse(
-    Long id,
-    Long profileId,
-    DocumentType type,
-    ProfileDocumentStatus status,
-    String documentNumber,
-    String issuingAuthority,
-    LocalDate issueDate,
-    LocalDate expirationDate,
-    String notes
-) {
+/**
+ * Rappresenta i metadati di un documento associato a un profilo.
+ */
+public record ProfileDocumentResponse(Long id, Long profileId, DocumentType type, ProfileDocumentStatus status,
+                                      String documentNumber, String issuingAuthority, LocalDate issueDate,
+                                      LocalDate expirationDate, String notes) {
 
-    public static ProfileDocumentResponse from(
-        ProfileDocument document
-    ) {
-        return new ProfileDocumentResponse(
-            document.getId(),
-            document.getProfile().getId(),
-            document.getType(),
-            document.getStatus(),
-            document.getDocumentNumber(),
-            document.getIssuingAuthority(),
-            document.getIssueDate(),
-            document.getExpirationDate(),
-            document.getNotes()
-        );
+    /**
+     * Converte un documento di dominio nella relativa rappresentazione REST.
+     *
+     * @param document documento da convertire
+     * @return DTO contenente i metadati del documento
+     */
+    public static ProfileDocumentResponse from(ProfileDocument document) {
+        return new ProfileDocumentResponse(document.getId(), document.getProfile().getId(), document.getType(), document.getStatus(), document.getDocumentNumber(), document.getIssuingAuthority(), document.getIssueDate(), document.getExpirationDate(), document.getNotes());
     }
 }
