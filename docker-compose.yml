@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: personarum
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "${DOCKER_DB_PORT:-5433}:5432"
+
+    volumes:
+      - personarum-postgres:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER} -d personarum"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/personarum
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      SERVER_PORT: 8080
+
+      APP_FRONTEND_ORIGIN: http://localhost:${DOCKER_FRONTEND_PORT:-8081}
+      SESSION_COOKIE_SECURE: "false"
+
+      APP_SECURITY_SEED_ENABLED: ${APP_SECURITY_SEED_ENABLED}
+      APP_INITIAL_ADMIN_PASSWORD: ${APP_INITIAL_ADMIN_PASSWORD}
+      APP_INITIAL_OPERATOR_PASSWORD: ${APP_INITIAL_OPERATOR_PASSWORD}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "${DOCKER_BACKEND_PORT:-8080}:8080"
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "${DOCKER_FRONTEND_PORT:-8081}:80"
+
+
+volumes:
+  personarum-postgres:
+    name: personarum-postgres

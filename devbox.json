@@ -12,8 +12,6 @@
 
   "include": ["plugin:postgresql"],
 
-  "env_from": ".env",
-
   "env": {
     "PGPORT": "5432"
   },
@@ -57,6 +55,7 @@
         "printf '  %-29s %s\\n' 'devbox run docker:down' 'Arresta lo stack Docker'",
         "printf '  %-29s %s\\n' 'devbox run docker:logs' 'Mostra i log dello stack Docker'",
         "printf '  %-29s %s\\n' 'devbox run docker:clean' 'Arresta Docker e rimuove i volumi'",
+	"printf '  %-29s %s\\n' 'devbox run docker:ps' 'Mostra lo stato dei container'",
 
         "printf '\\nAvvio in locale\\n'",
         "printf '  1. devbox run db:start\\n'",
@@ -64,7 +63,13 @@
         "printf '  3. devbox run frontend\\n\\n'"
       ],
 
-      "backend": ["cd backend", "mvn spring-boot:run"],
+      "backend": [
+	  "set -a",
+	  "source .env",
+	  "set +a",
+	  "cd backend",
+	  "mvn spring-boot:run"
+	],
 
       "frontend": ["cd frontend", "npm run dev"],
 
@@ -168,6 +173,8 @@
       "docker:logs": ["docker compose logs -f"],
 
       "docker:clean": ["docker compose down --volumes --remove-orphans"],
+
+      "docker:ps": ["docker compose ps"],
 
       "versions": [
         "printf '\\nPersonarum - ambiente di sviluppo\\n\\n'",
