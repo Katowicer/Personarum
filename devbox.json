@@ -7,7 +7,10 @@
     "nodejs@22",
     "postgresql@17",
     "curl",
-    "jq"
+    "jq",
+    "plantuml",
+    "graphviz",
+    "doxygen"
   ],
 
   "include": ["plugin:postgresql"],
@@ -55,7 +58,11 @@
         "printf '  %-29s %s\\n' 'devbox run docker:down' 'Arresta lo stack Docker'",
         "printf '  %-29s %s\\n' 'devbox run docker:logs' 'Mostra i log dello stack Docker'",
         "printf '  %-29s %s\\n' 'devbox run docker:clean' 'Arresta Docker e rimuove i volumi'",
-	"printf '  %-29s %s\\n' 'devbox run docker:ps' 'Mostra lo stato dei container'",
+        "printf '  %-29s %s\\n' 'devbox run docker:ps' 'Mostra lo stato dei container'",
+
+        "printf '  %-29s %s\\n' 'devbox run docs:javadoc' 'Genera la Javadoc del backend'",
+        "printf '  %-29s %s\\n' 'devbox run docs:coverage' 'Rigenera test e report JaCoCo'",
+        "printf '  %-29s %s\\n' 'devbox run docs:openapi' 'Esporta OpenAPI in docs/generated'",
 
         "printf '\\nAvvio in locale\\n'",
         "printf '  1. devbox run db:start\\n'",
@@ -64,12 +71,12 @@
       ],
 
       "backend": [
-	  "set -a",
-	  "source .env",
-	  "set +a",
-	  "cd backend",
-	  "mvn spring-boot:run"
-	],
+        "set -a",
+        "source .env",
+        "set +a",
+        "cd backend",
+        "mvn spring-boot:run"
+      ],
 
       "frontend": ["cd frontend", "npm run dev"],
 
@@ -117,7 +124,10 @@
 
       "test:services": ["cd backend", "mvn test -Dtest='*ServiceTest'"],
 
-      "coverage": ["cd backend", "mvn clean verify"],
+      "coverage": [
+        "cd backend",
+        "env -u DB_URL -u DB_USER -u DB_PASSWORD -u SERVER_PORT -u APP_FRONTEND_ORIGIN -u SESSION_COOKIE_SECURE -u APP_SECURITY_SEED_ENABLED -u APP_INITIAL_ADMIN_USERNAME -u APP_INITIAL_ADMIN_PASSWORD -u APP_INITIAL_OPERATOR_USERNAME -u APP_INITIAL_OPERATOR_PASSWORD mvn clean verify"
+      ],
 
       "frontend:check": [
         "cd frontend",
@@ -175,6 +185,103 @@
       "docker:clean": ["docker compose down --volumes --remove-orphans"],
 
       "docker:ps": ["docker compose ps"],
+
+      "unset_env": [
+        "unset DB_PASSWORD DB_USER DB_URL SERVER_PORT APP_FRONTEND_ORIGIN APP_SECURITY_SEED_ENABLED APP_INITIAL_ADMIN_USERNAME APP_INITIAL_ADMIN_PASSWORD APP_INITIAL_OPERATOR_USERNAME APP_INITIAL_OPERATOR_PASSWORD SESSION_COOKIE_SECURE"
+      ],
+
+      "docs:javadoc": [
+        "cd backend",
+        "mvn javadoc:javadoc",
+        "echo 'Jacadocs in backend/target/reports/apidocs.'"
+      ],
+
+      "docs:uml": [
+        "cd backend",
+        "mvn -Pdocumentation clean process-classes javadoc:javadoc",
+        "printf '\\nJavadoc e UML generati in backend/target/reports/apidocs/\\n'"
+      ],
+
+      "docs:doxygen": [
+        "mkdir -p docs/generated/doxygen",
+        "doxygen docs/doxygen/Doxyfile",
+        "printf '\\nDoxygen generato in docs/generated/doxygen/html/\\n'"
+      ],
+
+      "docs:database": [
+        "set -a",
+        "source ./.env",
+        "set +a",
+        "mkdir -p docs/generated/schemaspy",
+        "docker compose up -d postgres backend",
+        "NETWORK=$(docker inspect \"$(docker compose ps -q postgres)\" --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}')",
+        "printf 'Rete Docker: %s\\n' \"$NETWORK\"",
+        "docker run --rm --network \"$NETWORK\" -v \"$PWD/docs/generated/schemaspy:/output\" schemaspy/schemaspy:7.0.2 -t pgsql -host postgres -port 5432 -db personarum -s public -u \"$DB_USER\" -p \"$DB_PASSWORD\"",
+        "printf '\\nSchemaSpy generato in docs/generated/schemaspy/\\n'"
+      ],
+
+      "docs:coverage": [
+        "cd backend",
+        "env -u DB_URL -u DB_USER -u DB_PASSWORD -u SERVER_PORT -u APP_FRONTEND_ORIGIN -u SESSION_COOKIE_SECURE -u APP_SECURITY_SEED_ENABLED -u APP_INITIAL_ADMIN_USERNAME -u APP_INITIAL_ADMIN_PASSWORD -u APP_INITIAL_OPERATOR_USERNAME -u APP_INITIAL_OPERATOR_PASSWORD mvn clean verify",
+        "printf '\\nReport JaCoCo generato in backend/target/site/jacoco/\\n'"
+      ],
+
+      "docs:openapi": [
+        "mkdir -p docs/generated/openapi",
+        "curl --fail --show-error --silent http://localhost:8080/v3/api-docs -o docs/generated/openapi/openapi.json",
+        "curl --fail --show-error --silent http://localhost:8080/v3/api-docs.yaml -o docs/generated/openapi/openapi.yaml",
+        "printf '\\nOpenAPI generata in docs/generated/openapi/\\n'"
+      ],
+
+      "docs:open:uml": [
+        "test -f backend/target/reports/apidocs/index.html || { echo 'Documentazione UML non trovata. Esegui: devbox run docs:uml'; exit 1; }",
+        "explorer.exe \"$(wslpath -w backend/target/reports/apidocs/index.html)\""
+      ],
+
+      "docs:open:doxygen": [
+        "test -f docs/generated/doxygen/html/index.html || { echo 'Documentazione Doxygen non trovata. Esegui: devbox run docs:doxygen'; exit 1; }",
+        "explorer.exe \"$(wslpath -w docs/generated/doxygen/html/index.html)\""
+      ],
+
+      "docs:open:database": [
+        "test -f docs/generated/schemaspy/index.html || { echo 'Documentazione SchemaSpy non trovata. Esegui: devbox run docs:database'; exit 1; }",
+        "explorer.exe \"$(wslpath -w docs/generated/schemaspy/index.html)\""
+      ],
+
+      "docs:open:coverage": [
+        "test -f backend/target/site/jacoco/index.html || { echo 'Report JaCoCo non trovato. Esegui: devbox run docs:coverage'; exit 1; }",
+        "explorer.exe \"$(wslpath -w backend/target/site/jacoco/index.html)\""
+      ],
+
+      "docs:open:openapi": [
+        "test -f docs/generated/openapi/openapi.json || { echo 'OpenAPI non trovata. Esegui: devbox run docs:openapi'; exit 1; }",
+        "explorer.exe \"$(wslpath -w docs/generated/openapi/openapi.json)\""
+      ],
+
+      "docs:open:uml-folder": [
+        "explorer.exe \"$(wslpath -w backend/target/reports/apidocs)\""
+      ],
+
+      "docs:open:doxygen-folder": [
+        "explorer.exe \"$(wslpath -w docs/generated/doxygen/html)\""
+      ],
+
+      "docs:open:database-folder": [
+        "explorer.exe \"$(wslpath -w docs/generated/schemaspy/diagrams)\""
+      ],
+
+      "docs:files": [
+        "printf '\\n UMLDoclet / Javadoc \\n'",
+        "find backend/target/reports/apidocs -type f \\( -name '*.svg' -o -name '*.png' \\) 2>/dev/null | sort || true",
+        "printf '\\n Doxygen \\n'",
+        "find docs/generated/doxygen -type f \\( -name '*.svg' -o -name '*.png' \\) 2>/dev/null | sort || true",
+        "printf '\\n SchemaSpy \\n'",
+        "find docs/generated/schemaspy -type f \\( -name '*.svg' -o -name '*.png' \\) 2>/dev/null | sort || true",
+        "printf '\\n Altri report \\n'",
+        "test -f backend/target/site/jacoco/index.html && echo 'backend/target/site/jacoco/index.html' || true",
+        "test -f docs/generated/openapi/openapi.json && echo 'docs/generated/openapi/openapi.json' || true",
+        "test -f docs/generated/openapi/openapi.yaml && echo 'docs/generated/openapi/openapi.yaml' || true"
+      ],
 
       "versions": [
         "printf '\\nPersonarum - ambiente di sviluppo\\n\\n'",
